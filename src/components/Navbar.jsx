@@ -1,0 +1,35 @@
+import Link from 'next/link'
+import React from 'react'
+
+
+const Navbar = () => {
+  return (
+      <div>
+          <div className='flex justify-between items-center px-4 py-2 border-b'>
+                <h2 className='text-xl'>StudyNook</h2>
+          <ul className='flex gap-4'>
+              <li>
+                 <Link href="/">Home</Link> 
+              </li>
+              <li>
+                  <Link href="/room">Room</Link>
+              </li>
+              <li>
+                  <Link href="/contact">All Rooms</Link>
+              </li>
+            
+              </ul>
+              <ul className='flex gap-4'>
+                    <li>
+                  <Link href="/login">Login</Link>
+              </li>
+              <li>
+                  <Link href="/register">Register</Link>
+              </li>
+              </ul>
+          </div>
+    </div>
+  )
+}
+
+export default Navbar
