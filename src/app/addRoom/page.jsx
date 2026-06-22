@@ -5,19 +5,24 @@ import React from 'react'
 const AddRoom = () => {
 
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const formData = new FormData(e.target);
-    const roomData = {
-      roomName: formData.get('roomName'),
-      floor: formData.get('floor'),
-      capacity: formData.get('capacity'),
-      hourlyRate: formData.get('hourlyRate'),
-      imageUrl: formData.get('imageUrl'),
-      amenities: formData.getAll('amenities'),
-      description: formData.get('description'),
-    };
+    const formData = new FormData(e.currentTarget);
+    const roomData = Object.fromEntries(formData.entries());
+    
     console.log(roomData);
+
+    const res = await fetch('http://localhost:5000/rooms', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(roomData),
+    });
+
+    const result = await res.json();
+    console.log(result);
+
     // Handle form submission logic here
   }
 
