@@ -3,10 +3,30 @@ import { FieldError, TextField, Label, Input, TextArea, Button } from '@heroui/r
 import React from 'react'
 
 const AddRoom = () => {
+
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const roomData = {
+      roomName: formData.get('roomName'),
+      floor: formData.get('floor'),
+      capacity: formData.get('capacity'),
+      hourlyRate: formData.get('hourlyRate'),
+      imageUrl: formData.get('imageUrl'),
+      amenities: formData.getAll('amenities'),
+      description: formData.get('description'),
+    };
+    console.log(roomData);
+    // Handle form submission logic here
+  }
+
   return (
     <div className='max-w-4xl mx-auto px-4 py-10'>
       <h1 className='text-2xl font-bold text-center mt-10'>Add Room</h1>
-     <form className="p-10 space-y-8">
+      <form
+        onSubmit={handleSubmit}
+        className="p-10 space-y-8">
   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
 
     {/* Room Name */}
