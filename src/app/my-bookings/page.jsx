@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Calendar as CalendarIcon, Clock, MapPin, XCircle } from "lucide-react";
 import { toast } from "sonner";
 
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { fetchAPI } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -22,6 +23,8 @@ import { Badge } from "@/components/ui/badge";
 export default function MyBookingsPage() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [cancelDialog, setCancelDialog] = useState({ isOpen: false, bookingId: null });
+  const [isCancelling, setIsCancelling] = useState(false);
 
   useEffect(() => {
     async function fetchBookings() {
@@ -37,17 +40,25 @@ export default function MyBookingsPage() {
     fetchBookings();
   }, []);
 
-  const handleCancel = async (bookingId) => {
-    if (!confirm("Are you sure you want to cancel this booking?")) return;
+  const confirmCancel = (bookingId) => {
+    setCancelDialog({ isOpen: true, bookingId });
+  };
+
+  const executeCancel = async () => {
+    if (!cancelDialog.bookingId) return;
+    setIsCancelling(true);
     
     try {
-      await fetchAPI(`/bookings/${bookingId}/cancel`, { method: "PUT" });
+      await fetchAPI(`/bookings/${cancelDialog.bookingId}/cancel`, { method: "PUT" });
       setBookings((prev) => 
-        prev.map(b => b._id === bookingId ? { ...b, status: 'Cancelled' } : b)
+        prev.map(b => b._id === cancelDialog.bookingId ? { ...b, status: 'Cancelled' } : b)
       );
       toast.success("Booking cancelled successfully.");
+      setCancelDialog({ isOpen: false, bookingId: null });
     } catch (error) {
       toast.error(error.message || "Failed to cancel booking.");
+    } finally {
+      setIsCancelling(false);
     }
   };
 
@@ -140,7 +151,7 @@ export default function MyBookingsPage() {
                     <Button 
                       variant="destructive" 
                       className="flex-1"
-                      onClick={() => handleCancel(booking._id)}
+                      onClick={() => confirmCancel(booking._id)}
                     >
                       <XCircle className="h-4 w-4 mr-2" />
                       Cancel
@@ -152,6 +163,17 @@ export default function MyBookingsPage() {
           })}
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={cancelDialog.isOpen}
+        onOpenChange={(isOpen) => !isCancelling && setCancelDialog(prev => ({ ...prev, isOpen }))}
+        title="Cancel Booking"
+        description="Are you sure you want to cancel this booking? This action cannot be undone."
+        onConfirm={executeCancel}
+        isConfirming={isCancelling}
+        confirmText="Cancel Booking"
+        variant="destructive"
+      />
     </div>
   );
 }

@@ -29,7 +29,21 @@ export default async function Home() {
     <div className="flex-1 w-full bg-background">
       {/* Hero Section */}
       <section className="relative overflow-hidden py-24 lg:py-32 border-b">
-        <div className="container mx-auto px-4 text-center max-w-4xl">
+        {/* Background Video */}
+        <div className="absolute inset-0 w-full h-full z-0">
+          <div className="absolute inset-0 bg-background/80 md:bg-background/60 z-10" />
+          <video 
+            autoPlay 
+            loop 
+            muted 
+            playsInline 
+            className="w-full h-full object-cover"
+          >
+            <source src="https://assets.mixkit.co/videos/preview/mixkit-young-woman-working-on-her-laptop-in-a-library-4330-large.mp4" type="video/mp4" />
+          </video>
+        </div>
+
+        <div className="container relative z-10 mx-auto px-4 text-center max-w-4xl">
           <Badge variant="outline" className="mb-6 mx-auto">
             Welcome to the Future of Study
           </Badge>
@@ -69,7 +83,7 @@ export default async function Home() {
               <Card key={room._id} className="flex flex-col overflow-hidden transition-all hover:shadow-md">
                 <div className="aspect-video relative overflow-hidden bg-muted">
                   <img
-                    src={room.imageUrl || "https://images.unsplash.com/photo-1497366216548-37526070297c"}
+                    src={room.imageUrl || "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQx5qj7dX3fQX5yefBgsSSoMT-yxsRmOkslWxeAf3BFSw&s=10"}
                     alt={room.roomName}
                     className="object-cover w-full h-full transition-transform hover:scale-105"
                   />

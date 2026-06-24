@@ -5,6 +5,8 @@ import Link from "next/link";
 import { Plus, Trash2, Edit, ExternalLink, MapPin } from "lucide-react";
 import { toast } from "sonner";
 
+import { ConfirmDialog } from "@/components/ConfirmDialog";
+
 import { fetchAPI } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -21,6 +23,8 @@ import { Badge } from "@/components/ui/badge";
 export default function MyListingsPage() {
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [deleteDialog, setDeleteDialog] = useState({ isOpen: false, roomId: null });
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     async function fetchListings() {
@@ -36,15 +40,23 @@ export default function MyListingsPage() {
     fetchListings();
   }, []);
 
-  const handleDelete = async (roomId) => {
-    if (!confirm("Are you sure you want to delete this listing?")) return;
+  const confirmDelete = (roomId) => {
+    setDeleteDialog({ isOpen: true, roomId });
+  };
+
+  const executeDelete = async () => {
+    if (!deleteDialog.roomId) return;
+    setIsDeleting(true);
     
     try {
-      await fetchAPI(`/rooms/${roomId}`, { method: "DELETE" });
-      setListings((prev) => prev.filter((r) => r._id !== roomId));
+      await fetchAPI(`/rooms/${deleteDialog.roomId}`, { method: "DELETE" });
+      setListings((prev) => prev.filter((r) => r._id !== deleteDialog.roomId));
       toast.success("Listing deleted successfully.");
+      setDeleteDialog({ isOpen: false, roomId: null });
     } catch (error) {
       toast.error(error.message || "Failed to delete listing.");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -135,7 +147,7 @@ export default function MyListingsPage() {
                         variant="ghost" 
                         size="icon" 
                         className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                        onClick={() => handleDelete(room._id)}
+                        onClick={() => confirmDelete(room._id)}
                         title="Delete Listing"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -148,6 +160,17 @@ export default function MyListingsPage() {
           </Table>
         )}
       </div>
+
+      <ConfirmDialog
+        isOpen={deleteDialog.isOpen}
+        onOpenChange={(isOpen) => !isDeleting && setDeleteDialog(prev => ({ ...prev, isOpen }))}
+        title="Delete Listing"
+        description="Are you sure you want to delete this listing? This action cannot be undone."
+        onConfirm={executeDelete}
+        isConfirming={isDeleting}
+        confirmText="Delete"
+        variant="destructive"
+      />
     </div>
   );
 }

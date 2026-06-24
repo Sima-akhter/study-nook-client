@@ -11,6 +11,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 import { fetchAPI } from "@/lib/api";
 import { useSession } from "@/lib/auth-client";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -54,6 +55,7 @@ export default function RoomDetailsPage({ params }) {
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
   const [bookingLoading, setBookingLoading] = useState(false);
+  const [deleteDialog, setDeleteDialog] = useState(false);
   
   // Booking modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -105,13 +107,14 @@ export default function RoomDetailsPage({ params }) {
     }
   }, [isModalOpen, selectedDate, roomId]);
 
-  const handleDelete = async () => {
-    if (!confirm("Are you sure you want to delete this room? This action cannot be undone.")) return;
-    
+  const confirmDelete = () => setDeleteDialog(true);
+  
+  const executeDelete = async () => {
     setDeleting(true);
     try {
       await fetchAPI(`/rooms/${roomId}`, { method: "DELETE" });
       toast.success("Room deleted successfully");
+      setDeleteDialog(false);
       router.push("/my-listings");
     } catch (error) {
       toast.error(error.message || "Failed to delete room");
@@ -187,7 +190,7 @@ export default function RoomDetailsPage({ params }) {
         {isOwner && (
           <div className="flex gap-2">
             {/* Note: Update Room would go to an edit form, for now just placeholder or modal */}
-            <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
+            <Button variant="destructive" onClick={confirmDelete} disabled={deleting}>
               {deleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
               Delete Room
             </Button>
@@ -375,6 +378,17 @@ export default function RoomDetailsPage({ params }) {
           </Card>
         </div>
       </div>
+      
+      <ConfirmDialog
+        isOpen={deleteDialog}
+        onOpenChange={(isOpen) => !deleting && setDeleteDialog(isOpen)}
+        title="Delete Room"
+        description="Are you sure you want to delete this room? This action cannot be undone."
+        onConfirm={executeDelete}
+        isConfirming={deleting}
+        confirmText="Delete Room"
+        variant="destructive"
+      />
     </div>
   );
 }
