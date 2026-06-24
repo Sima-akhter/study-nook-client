@@ -126,8 +126,10 @@ export default function MyListingsPage() {
                           <ExternalLink className="h-4 w-4" />
                         </Link>
                       </Button>
-                      <Button variant="ghost" size="icon" title="Edit Listing (Placeholder)">
-                        <Edit className="h-4 w-4" />
+                      <Button variant="ghost" size="icon" title="Edit Listing" asChild>
+                        <Link href={`/rooms/edit/${room._id}`}>
+                          <Edit className="h-4 w-4" />
+                        </Link>
                       </Button>
                       <Button 
                         variant="ghost" 

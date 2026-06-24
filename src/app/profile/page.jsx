@@ -1,192 +1,194 @@
 "use client";
 
-import { useState } from "react";
-import { authClient, useSession } from "@/lib/auth-client";
-import { toast } from "react-toastify";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { BookOpen, Calendar, MapPin, Search } from "lucide-react";
+import { toast } from "sonner";
 
-const MyProfilePage = () => {
-  const router = useRouter();
-  const [activeTab, setActiveTab] = useState("profile");
-  const [updating, setUpdating] = useState(false);
+import { useSession } from "@/lib/auth-client";
+import { fetchAPI } from "@/lib/api";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
+export default function ProfilePage() {
   const { data: session, isPending } = useSession();
   const user = session?.user;
 
-  const handleUpdateProfile = async (e) => {
-    e.preventDefault();
-    setUpdating(true);
-    const name = e.target.name.value;
-    const image = e.target.image.value;
+  const [summary, setSummary] = useState(null);
+  const [recentBookings, setRecentBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-    const { data, error } = await authClient.updateUser({
-      name,
-      image,
-    });
-
-    setUpdating(false);
-
-    if (error) {
-      toast.error(error.message || "Failed to update profile.");
-      return;
+  useEffect(() => {
+    async function loadDashboardData() {
+      try {
+        const [summaryData, recentData] = await Promise.all([
+          fetchAPI("/dashboard/summary"),
+          fetchAPI("/dashboard/recent-bookings"),
+        ]);
+        setSummary(summaryData.data);
+        setRecentBookings(recentData.data);
+      } catch (error) {
+        toast.error("Failed to load profile data.");
+      } finally {
+        setLoading(false);
+      }
     }
+    
+    if (!isPending && user) {
+      loadDashboardData();
+    } else if (!isPending && !user) {
+      setLoading(false);
+    }
+  }, [user, isPending]);
 
-    toast.success("Profile updated successfully.");
-    router.refresh();
-  };
-
-  const handleLogout = async () => {
-    await authClient.signOut({
-      fetchOptions: {
-        onSuccess: () => {
-          toast.success("Logged out");
-          router.push("/");
-          router.refresh();
-        },
-      },
-    });
-  };
-
-  if (isPending) {
+  if (isPending || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-muted-foreground border-t-foreground rounded-full animate-spin"></div>
+      <div className="container mx-auto px-4 py-12 max-w-5xl flex-1 space-y-8">
+        <Skeleton className="h-48 w-full rounded-xl" />
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-32 w-full rounded-xl" />
+          ))}
+        </div>
+        <Skeleton className="h-[400px] w-full rounded-xl" />
       </div>
     );
   }
 
   if (!user) {
-    return null; 
+    return (
+      <div className="container mx-auto px-4 py-24 flex flex-col items-center justify-center flex-1 text-center">
+        <h2 className="text-2xl font-bold mb-4">Please login to view your profile</h2>
+        <Button asChild>
+          <Link href="/login">Go to Login</Link>
+        </Button>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-sans pt-12 pb-24">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-5xl">
-        <header className="mb-12">
-          <h1 className="text-3xl font-medium tracking-tight text-foreground">Settings</h1>
-          <p className="text-sm text-muted-foreground mt-1">Manage your account settings and preferences.</p>
-        </header>
+    <div className="container mx-auto px-4 py-12 max-w-5xl flex-1 space-y-8">
+      {/* User Info Card */}
+      <Card className="overflow-hidden shadow-sm">
+        <div className="h-24 bg-muted border-b"></div>
+        <CardContent className="p-6 relative">
+          <div className="flex flex-col sm:flex-row gap-6 items-center sm:items-start -mt-12">
+            <Avatar className="h-24 w-24 border-4 border-background bg-background shadow-sm">
+              <AvatarImage src={user.image} alt={user.name} />
+              <AvatarFallback className="text-3xl">{user.name?.charAt(0).toUpperCase()}</AvatarFallback>
+            </Avatar>
+            <div className="flex-1 text-center sm:text-left mt-2 sm:mt-10">
+              <h1 className="text-2xl font-bold tracking-tight">{user.name}</h1>
+              <p className="text-muted-foreground">{user.email}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-        <div className="flex flex-col md:flex-row gap-12">
-          {/* Sidebar */}
-          <aside className="w-full md:w-64 shrink-0">
-            <nav className="flex flex-col space-y-1">
-              <button
-                onClick={() => setActiveTab("profile")}
-                className={`text-left px-4 py-2 text-sm font-medium rounded-sm transition-colors ${
-                  activeTab === "profile"
-                    ? "bg-secondary text-foreground"
-                    : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
-                }`}
-              >
-                Profile
-              </button>
-              <button
-                onClick={() => setActiveTab("orders")}
-                className={`text-left px-4 py-2 text-sm font-medium rounded-sm transition-colors ${
-                  activeTab === "orders"
-                    ? "bg-secondary text-foreground"
-                    : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
-                }`}
-              >
-                Orders
-              </button>
-              <button
-                onClick={handleLogout}
-                className="text-left px-4 py-2 text-sm font-medium text-danger hover:bg-danger/10 rounded-sm transition-colors mt-4"
-              >
-                Log out
-              </button>
-            </nav>
-          </aside>
+      {/* Stats Section */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Rooms Listed</CardDescription>
+            <CardTitle className="text-3xl font-bold">
+              {summary?.totalRoomsOwned || 0}
+            </CardTitle>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Total Bookings</CardDescription>
+            <CardTitle className="text-3xl font-bold">
+              {summary?.totalBookingsMade || 0}
+            </CardTitle>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Confirmed</CardDescription>
+            <CardTitle className="text-3xl font-bold text-primary">
+              {summary?.totalConfirmedBookings || 0}
+            </CardTitle>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Cancelled</CardDescription>
+            <CardTitle className="text-3xl font-bold text-muted-foreground">
+              {summary?.totalCancelledBookings || 0}
+            </CardTitle>
+          </CardHeader>
+        </Card>
+      </div>
 
-          {/* Main Content */}
-          <main className="flex-1">
-            {activeTab === "profile" && (
-              <div className="max-w-2xl">
-                <div className="mb-8">
-                  <h2 className="text-xl font-medium text-foreground mb-1">Profile</h2>
-                  <p className="text-sm text-muted-foreground">Update your personal information.</p>
-                </div>
-
-                <form onSubmit={handleUpdateProfile} className="space-y-6">
-                  <div className="flex items-center gap-6 pb-6 border-b border-border">
-                    <img
-                      src={user.image || `https://ui-avatars.com/api/?name=${user.name}`}
-                      alt="Profile"
-                      className="w-16 h-16 rounded-full object-cover border border-border"
-                    />
-                    <div>
-                      <h3 className="text-sm font-medium text-foreground">{user.name}</h3>
-                      <p className="text-xs text-muted-foreground">{user.email}</p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-xs font-medium text-foreground mb-1.5 uppercase tracking-wide">Full Name</label>
-                      <input
-                        required
-                        name="name"
-                        type="text"
-                        defaultValue={user.name}
-                        className="w-full px-3 py-2 border border-border rounded-sm bg-background text-sm focus:outline-none focus:border-foreground focus:ring-0 transition-colors"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-medium text-foreground mb-1.5 uppercase tracking-wide">Email</label>
-                      <input
-                        name="email"
-                        type="email"
-                        defaultValue={user.email}
-                        disabled
-                        className="w-full px-3 py-2 border border-border rounded-sm bg-secondary text-muted-foreground text-sm cursor-not-allowed"
-                      />
-                      <p className="text-xs text-muted-foreground mt-1">Email address cannot be changed.</p>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-medium text-foreground mb-1.5 uppercase tracking-wide">Avatar URL</label>
-                      <input
-                        name="image"
-                        type="url"
-                        defaultValue={user.image || ""}
-                        placeholder="https://example.com/avatar.jpg"
-                        className="w-full px-3 py-2 border border-border rounded-sm bg-background text-sm focus:outline-none focus:border-foreground focus:ring-0 transition-colors"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="pt-4 flex justify-end">
-                    <button
-                      type="submit"
-                      disabled={updating}
-                      className="bg-foreground text-background font-medium text-sm px-6 py-2 rounded-sm hover:bg-foreground/90 transition-colors disabled:opacity-50"
-                    >
-                      {updating ? "Saving..." : "Save changes"}
-                    </button>
-                  </div>
-                </form>
-              </div>
-            )}
-
-            {activeTab === "orders" && (
+      {/* Recent Activity */}
+      <div className="grid grid-cols-1 gap-8">
+        <Card className="shadow-sm">
+          <CardHeader className="border-b bg-muted/20 pb-4">
+            <div className="flex justify-between items-center">
               <div>
-                <div className="mb-8">
-                  <h2 className="text-xl font-medium text-foreground mb-1">Orders</h2>
-                  <p className="text-sm text-muted-foreground">View your order history.</p>
-                </div>
-                <div className="border border-border rounded-sm p-8 text-center text-muted-foreground text-sm">
-                  You  placed any orders yet.
-                </div>
+                <CardTitle>Recent Bookings</CardTitle>
+                <CardDescription>Your latest study room reservations.</CardDescription>
+              </div>
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/my-bookings">View All</Link>
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            {recentBookings.length === 0 ? (
+              <div className="p-8 text-center flex flex-col items-center justify-center">
+                <Search className="h-8 w-8 text-muted-foreground mb-3" />
+                <p className="text-muted-foreground font-medium">No recent bookings</p>
+                <Button variant="link" asChild className="mt-2">
+                  <Link href="/rooms">Explore available rooms</Link>
+                </Button>
+              </div>
+            ) : (
+              <div className="divide-y">
+                {recentBookings.map((booking) => {
+                  const room = booking.room;
+                  return (
+                    <div key={booking._id} className="p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-colors hover:bg-muted/10">
+                      <div className="flex items-start gap-4">
+                        <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                          <BookOpen className="h-5 w-5 text-primary" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-lg">{room?.roomName || "Unknown Room"}</h4>
+                          <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mt-1">
+                            <span className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3" /> {booking.date}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <MapPin className="h-3 w-3" /> Floor {room?.floor}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end gap-2 w-full sm:w-auto">
+                        <Badge variant={booking.status === "cancelled" ? "destructive" : "secondary"}>
+                          {booking.status}
+                        </Badge>
+                        <span className="text-sm font-medium">{booking.startTime} - {booking.endTime}</span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
-          </main>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
-};
-
-export default MyProfilePage;
+}

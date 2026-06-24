@@ -88,7 +88,7 @@ export default function MyBookingsPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {bookings.map((booking) => {
-            const room = booking.roomId;
+            const room = booking.room;
             const cancellable = isCancellable(booking);
             
             return (

@@ -43,6 +43,7 @@ export default function Navbar() {
   const navLinks = [
     { name: "Home", href: "/" },
     { name: "Rooms", href: "/rooms" },
+    
   ];
 
   const privateLinks = [
@@ -108,8 +109,14 @@ export default function Navbar() {
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link href="/my-bookings">
+                  <Link href="/profile">
                     <User className="mr-2 h-4 w-4" />
+                    <span>Profile</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/my-bookings">
+                    <BookOpen className="mr-2 h-4 w-4" />
                     <span>My Bookings</span>
                   </Link>
                 </DropdownMenuItem>
