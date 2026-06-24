@@ -57,7 +57,7 @@ export default function Navbar() {
   const NavItems = () => (
     <>
       {allLinks.map((link) => (
-        <Link
+        <Link 
           key={link.href}
           href={link.href}
           className={`text-sm font-medium transition-colors hover:text-primary ${
