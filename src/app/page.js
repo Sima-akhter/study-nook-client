@@ -12,7 +12,8 @@ export const metadata = {
 
 async function getLatestRooms() {
   try {
-    const res = await fetch("http://localhost:5000/rooms/latest", { cache: "no-store" });
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+    const res = await fetch(`${apiBaseUrl}/rooms/latest`, { cache: "no-store" });
     if (!res.ok) return [];
     const json = await res.json();
     return json.data || [];

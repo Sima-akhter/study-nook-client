@@ -2,7 +2,7 @@ import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { MongoClient } from "mongodb";
 
-const client = new MongoClient(process.env.MONGODB_URI || "mongodb://localhost:27017/dummy-db");
+const client = new MongoClient(process.env.MONGODB_URI);
 
 const db = client.db("study-nook");
 
@@ -15,10 +15,28 @@ export const auth = betterAuth({
 
   socialProviders: {
     google: {
-      clientId: process.env.GOOGLE_CLIENT_ID || "dummy-google-client-id",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "dummy-google-client-secret",
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     },
   },
 
-  secret: process.env.BETTER_AUTH_SECRET || "dummy-secret-at-least-32-characters-long-for-build-time",
+  secret: process.env.BETTER_AUTH_SECRET,
+
+  trustedOrigins: [
+    "https://study-nook-client-omega.vercel.app",
+    "http://localhost:3001",
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "https://study-nook-client-omega.vercel.app",
+  ],
+
+  advanced: {
+    cookies: {
+      session_token: {
+        attributes: {
+          httpOnly: false,
+        },
+      },
+    },
+  },
 });
