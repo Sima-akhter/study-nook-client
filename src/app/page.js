@@ -1,8 +1,21 @@
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, MapPin, Shield, Star, Users } from "lucide-react";
+import {
+  ArrowRight,
+  CheckCircle2,
+  MapPin,
+  Shield,
+  Star,
+  Users,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 export const metadata = {
@@ -12,8 +25,12 @@ export const metadata = {
 
 async function getLatestRooms() {
   try {
-    const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-    const res = await fetch(`${apiBaseUrl}/rooms/latest`, { cache: "no-store" });
+    const apiBaseUrl =
+      process.env.NEXT_PUBLIC_API_URL ||
+      "https://study-nook-server-ashy.vercel.app";
+    const res = await fetch(`${apiBaseUrl}/rooms/latest`, {
+      cache: "no-store",
+    });
     if (!res.ok) return [];
     const json = await res.json();
     return json.data || [];
