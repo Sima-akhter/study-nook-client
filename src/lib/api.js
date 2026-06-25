@@ -1,3 +1,5 @@
+import { authClient } from "./auth-client";
+
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ||
   "https://study-nook-server-ashy.vercel.app";
@@ -13,9 +15,20 @@ function getCookie(name) {
 export async function fetchAPI(endpoint, options = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
 
-  const token =
+  let token =
     getCookie("better-auth.session_token") ||
     getCookie("__secure-better-auth.session_token");
+
+  if (!token) {
+    try {
+      const sessionRes = await authClient.getSession();
+      if (sessionRes?.data?.session?.token) {
+        token = sessionRes.data.session.token;
+      }
+    } catch (err) {
+      console.error("Failed to get session from authClient:", err);
+    }
+  }
 
   const headers = {
     "Content-Type": "application/json",
